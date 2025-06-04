@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { useNavigate } from "react-router-dom";
-import ScrollToTop from "@/components/ScrollToTop"; // ✅ impo
+import ScrollToTop from "@/components/ScrollToTop";
 
 interface Tour {
   id: number;
@@ -45,18 +45,19 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
   const [duration, setDuration] = useState(0);
   const [selectedLanguage, setSelectedLanguage] = useState("English");
   const [showBottomSheet, setShowBottomSheet] = useState(false);
-  const [waveformData, setWaveformData] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Generate mock waveform data
-  useEffect(() => {
-    const data = Array.from({ length: 50 }, () => Math.random() * 100);
-    setWaveformData(data);
-  }, []);
+  const goToDirectionPage = () => {
+    navigate("/direction", {
+      state: {
+        tourTitle: tour.title,
+        coordinates: tour.coordinates,
+      },
+    });
+  };
 
-  // Audio event handlers
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -113,7 +114,6 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
   const handleSeek = (value: number[]) => {
     const audio = audioRef.current;
     if (!audio) return;
-
     const newTime = value[0];
     audio.currentTime = newTime;
     setCurrentTime(newTime);
@@ -126,48 +126,18 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleGetDirections = () => {
-  if (!navigator.geolocation) {
-    alert("Geolocation is not supported by your browser.");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const userLat = position.coords.latitude;
-      const userLng = position.coords.longitude;
-      const destLat = tour.coordinates?.lat || 13.0827;
-      const destLng = tour.coordinates?.lng || 80.2707;
-
-      const mapsUrl = `https://www.google.com/maps/dir/?api=&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=walking`;
-
-      window.open(mapsUrl, "_blank");
-    },
-    (error) => {
-      console.error("Error getting location:", error);
-      alert("Unable to retrieve your location. Please allow location access.");
-    }
-  );
-};
-
   const languages = ["English", "Tamil", "Hindi"];
 
   return (
-    <div className="inset-0 bg-white z-50 flex flex-col">
-      {/* Hidden Audio Element */}
+    <div className="inset-0 pb-10 bg-white z-50 flex flex-col">
       <ScrollToTop />
       <audio ref={audioRef} src={tour.audioUrl} preload="metadata" />
 
       {/* Header */}
       <div className="relative">
-        <img
-          src={tour.image}
-          alt={tour.title}
-          className="w-full h-80 object-cover"
-        />
+        <img src={tour.image} alt={tour.title} className="w-full h-80 object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
 
-        {/* Back Button */}
         <button
           onClick={onClose}
           className="absolute top-6 left-4 p-2 bg-black/30 rounded-full backdrop-blur-sm"
@@ -175,25 +145,17 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
 
-        {/* Download Button */}
         <button className="absolute top-6 right-4 p-2 bg-black/30 rounded-full backdrop-blur-sm">
           <Download className="w-6 h-6 text-white" />
         </button>
 
-        {/* Title and Info */}
         <div className="absolute bottom-6 left-4 right-4">
           <div className="flex items-center gap-2 mb-2">
             <Badge className="bg-orange-600 text-white">{tour.price}</Badge>
-            <Badge className="bg-white/20 text-white backdrop-blur-sm">
-              {tour.difficulty}
-            </Badge>
+            <Badge className="bg-white/20 text-white backdrop-blur-sm">{tour.difficulty}</Badge>
           </div>
-          <h1 className="text-2xl font-serif font-bold text-white mb-2">
-            {tour.title}
-          </h1>
-          <p className="text-white/90 text-sm">
-            {tour.duration} • {tour.distance} away
-          </p>
+          <h1 className="text-2xl font-serif font-bold text-white mb-2">{tour.title}</h1>
+          <p className="text-white/90 text-sm">{tour.duration} • {tour.distance} away</p>
         </div>
       </div>
 
@@ -201,19 +163,15 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2 mb-2">
           <Globe className="w-4 h-4 text-gray-600" />
-          <span className="text-sm font-medium text-gray-900">
-            Select Language
-          </span>
+          <span className="text-sm font-medium text-gray-900">Select Language</span>
         </div>
         <div className="flex gap-2">
           {languages.map((lang) => (
             <button
               key={lang}
               onClick={() => setSelectedLanguage(lang)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                selectedLanguage === lang
-                  ? "bg-orange-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                selectedLanguage === lang ? "bg-orange-600 text-white" : "bg-gray-100 text-gray-700"
               }`}
             >
               {lang}
@@ -222,34 +180,25 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
         </div>
       </div>
 
-      {/* Waveform Visualization */}
+      {/* Audio Controls */}
       <div className="px-4 py-6 flex-1">
         <div className="mb-6">
-          {/* Progress Slider */}
-          <div className="my-4">
-            <Slider
-              value={[currentTime]}
-              onValueChange={handleSeek}
-              max={duration || 100}
-              step={1}
-              className="w-full"
-              disabled={!duration}
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
+          <Slider
+            value={[currentTime]}
+            onValueChange={handleSeek}
+            max={duration || 100}
+            step={1}
+            disabled={!duration}
+          />
+          <div className="flex justify-between text-xs text-gray-500 mt-2">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
           </div>
 
-          {/* Playback Controls */}
-          <div className="flex items-center justify-center gap-6">
-            <button
-              className="p-3 rounded-full hover:bg-gray-100 transition-colors"
-              onClick={() => handleSeek([Math.max(0, currentTime - 10)])}
-            >
+          <div className="flex items-center justify-center gap-6 mt-4">
+            <button onClick={() => handleSeek([Math.max(0, currentTime - 10)])}>
               <SkipBack className="w-6 h-6 text-gray-700" />
             </button>
-
             <button
               onClick={togglePlayPause}
               disabled={isLoading}
@@ -258,22 +207,18 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
               {isLoading ? (
                 <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : isPlaying ? (
-                <Pause className="w-8 h-8 text-white" />
+                <Pause className="w-8 h-8" />
               ) : (
-                <Play className="w-8 h-8 text-white ml-1" />
+                <Play className="w-8 h-8" />
               )}
             </button>
-
-            <button
-              className="p-3 rounded-full hover:bg-gray-100 transition-colors"
-              onClick={() => handleSeek([Math.min(duration, currentTime + 10)])}
-            >
+            <button onClick={() => handleSeek([Math.min(duration, currentTime + 10)])}>
               <SkipForward className="w-6 h-6 text-gray-700" />
             </button>
           </div>
         </div>
 
-        {/* Map Preview Frame */}
+        {/* Map Preview */}
         <div className="mb-4 rounded-lg overflow-hidden shadow">
           <iframe
             title={`Map of ${tour.title}`}
@@ -286,16 +231,15 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
             referrerPolicy="no-referrer-when-downgrade"
             src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyCjBl_xeDVO6CTAl9Ab9vjfUUnns8G9v4Y&q=${encodeURIComponent(
               tour.title
-            )}
-            }&zoom=15`}
+            )}&zoom=15`}
           />
         </div>
 
-        {/* Get Directions Button */}
-        <div className="px-4">
+        {/* Get Directions */}
+        <div className="px-4 mt-5">
           <button
-            onClick={handleGetDirections}
-            className="w-full text-white bg-gradient-to-r from-orange-400 to-yellow-400 shadow-lg py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            onClick={goToDirectionPage}
+            className="w-full bg-gradient-to-r from-orange-400 to-yellow-400 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2"
           >
             <MapPin className="w-5 h-5" />
             Get Directions
@@ -303,8 +247,8 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
         </div>
       </div>
 
-      {/* Bottom Sheet Trigger */}
-      <div className="px-4 pb-28">
+      {/* Bottom Sheet */}
+      <div className="px-4">
         <button
           onClick={() => setShowBottomSheet(true)}
           className="w-full flex items-center justify-center gap-2 py-3 text-gray-600 hover:text-gray-900 transition-colors"
@@ -314,89 +258,84 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
         </button>
       </div>
 
-      {/* Bottom Sheet */}
       {showBottomSheet && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50"
-          onClick={() => setShowBottomSheet(false)}
-        >
-          <div
-            className="absolute bottom-0 left-0 right-0 bg-white pb-20 rounded-t-2xl max-h-[80vh] overflow-y-auto animate-slide-in-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4">
-              {/* Handle */}
-              <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6" />
+  <div
+    className="fixed inset-0 bg-black/50 z-50"
+    onClick={() => setShowBottomSheet(false)}
+  >
+    <div
+      className="absolute bottom-0 left-0 right-0 bg-white pb-20 rounded-t-2xl max-h-[80vh] overflow-y-auto animate-slide-in-up"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="p-4">
+        {/* Handle */}
+        <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6" />
 
-              <h2 className="text-xl font-serif font-bold text-gray-900 mb-4">
-                About This Tour
-              </h2>
+        <h2 className="text-xl font-serif font-bold text-gray-900 mb-4">
+          About This Tour
+        </h2>
 
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    Description
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {tour.fullDescription ||
-                      tour.description +
-                        " This immersive audio experience will take you through centuries of rich cultural heritage, with detailed explanations of architectural marvels, historical significance, and local traditions. Perfect for history enthusiasts and cultural explorers."}
-                  </p>
+        <div className="space-y-6">
+          {/* Description */}
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-2">
+              Description
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              {tour.fullDescription ||
+                tour.description +
+                  " This immersive audio experience will take you through centuries of rich cultural heritage, with detailed explanations of architectural marvels, historical significance, and local traditions. Perfect for history enthusiasts and cultural explorers."}
+            </p>
+          </div>
+
+          {/* Tour Highlights */}
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">
+              Tour Highlights
+            </h3>
+            <div className="space-y-2">
+              {(
+                tour.highlights || [
+                  "Expert narration by local historians",
+                  "High-quality audio with ambient sounds",
+                  "Interactive map with GPS guidance",
+                  "Offline listening capability",
+                  "Cultural context and traditions",
+                ]
+              ).map((highlight, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-orange-600 rounded-full mt-2 flex-shrink-0" />
+                  <span className="text-gray-600">{highlight}</span>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    Tour Highlights
-                  </h3>
-                  <div className="space-y-2">
-                    {(
-                      tour.highlights || [
-                        "Expert narration by local historians",
-                        "High-quality audio with ambient sounds",
-                        "Interactive map with GPS guidance",
-                        "Offline listening capability",
-                        "Cultural context and traditions",
-                      ]
-                    ).map((highlight, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <div className="w-2 h-2 bg-orange-600 rounded-full mt-2 flex-shrink-0" />
-                        <span className="text-gray-600">{highlight}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-500">Duration</div>
-                    <div className="font-semibold text-gray-900">
-                      {tour.duration}
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-500">Difficulty</div>
-                    <div className="font-semibold text-gray-900">
-                      {tour.difficulty}
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-500">Distance</div>
-                    <div className="font-semibold text-gray-900">
-                      {tour.distance}
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-500">Languages</div>
-                    <div className="font-semibold text-gray-900">
-                      {tour.language}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Tour Metadata Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-500">Duration</div>
+              <div className="font-semibold text-gray-900">{tour.duration}</div>
+            </div>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-500">Difficulty</div>
+              <div className="font-semibold text-gray-900">{tour.difficulty}</div>
+            </div>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-500">Distance</div>
+              <div className="font-semibold text-gray-900">{tour.distance}</div>
+            </div>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-500">Languages</div>
+              <div className="font-semibold text-gray-900">{tour.language}</div>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

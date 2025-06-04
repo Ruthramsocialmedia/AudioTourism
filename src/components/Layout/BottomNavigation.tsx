@@ -42,12 +42,6 @@ const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationProps) => 
       path: "/events",
     },
     {
-      id: "directions", // 🆕 new stable tab
-      label: "Stable",
-      icon: <Route className="w-5 h-5" />,
-      path: "/directions",
-    },
-    {
       id: "profile",
       label: "Profile",
       icon: <Settings className="w-5 h-5" />,

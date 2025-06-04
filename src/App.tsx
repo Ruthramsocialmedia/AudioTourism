@@ -17,9 +17,9 @@ import JournalScreen from "./components/Journal/JournalScreen";
 import EventsScreen from "./components/Events/EventsScreen";
 import ProfileScreen from "./components/Profile/ProfileScreen";
 
-import DirectionsPage from "./pages/DirectionsPage";
-
 import ScrollToTop from "@/components/ScrollToTop"; // ✅ impo
+
+import DirectionPage from "./components/DirectionPage";
 
 const queryClient = new QueryClient();
 
@@ -29,18 +29,35 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-       <ScrollToTop />
+        <ScrollToTop />
         <Routes>
-
           {/* Pages with BottomNavigation */}
           <Route element={<MainLayout />}>
             <Route path={ROUTES.DISCOVER} element={<DiscoverScreen />} />
-            <Route path={ROUTES.TEMPLES} element={<CategoryScreen category="Temples" categoryIcon="🏛️" />} />
-            <Route path={ROUTES.FORTS} element={<CategoryScreen category="Forts" categoryIcon="🏰" />} />
-            <Route path={ROUTES.MARKETS} element={<CategoryScreen category="Markets" categoryIcon="🛍️" />} />
-            <Route path={ROUTES.GARDENS} element={<CategoryScreen category="Gardens" categoryIcon="🌺" />} />
-            <Route path={ROUTES.MUSEUMS} element={<CategoryScreen category="Museums" categoryIcon="🏛️" />} />
-            <Route path={ROUTES.VILLAGES} element={<CategoryScreen category="Villages" categoryIcon="🏘️" />} />
+            <Route
+              path={ROUTES.TEMPLES}
+              element={<CategoryScreen category="Temples" categoryIcon="🏛️" />}
+            />
+            <Route
+              path={ROUTES.FORTS}
+              element={<CategoryScreen category="Forts" categoryIcon="🏰" />}
+            />
+            <Route
+              path={ROUTES.MARKETS}
+              element={<CategoryScreen category="Markets" categoryIcon="🛍️" />}
+            />
+            <Route
+              path={ROUTES.GARDENS}
+              element={<CategoryScreen category="Gardens" categoryIcon="🌺" />}
+            />
+            <Route
+              path={ROUTES.MUSEUMS}
+              element={<CategoryScreen category="Museums" categoryIcon="🏛️" />}
+            />
+            <Route
+              path={ROUTES.VILLAGES}
+              element={<CategoryScreen category="Villages" categoryIcon="🏘️" />}
+            />
 
             {/* Bottom Nav Tabs */}
             <Route path={ROUTES.TOURS} element={<ToursScreen />} />
@@ -48,11 +65,12 @@ const App = () => (
             <Route path={ROUTES.EVENTS} element={<EventsScreen />} />
             <Route path={ROUTES.PROFILE} element={<ProfileScreen />} />
           </Route>
-          
+
+          <Route path="/direction" element={<DirectionPage />} />
+
           {/* Outside layout (e.g. splash, error) */}
           <Route path={ROUTES.HOME} element={<Index />} />
           <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
-          <Route path="/directions" element={<DirectionsPage />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
