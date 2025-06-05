@@ -129,7 +129,7 @@ const AudioPlayer = ({ tour, onClose }: AudioPlayerProps) => {
   const languages = ["English", "Tamil", "Hindi"];
 
   return (
-    <div className="inset-0 pb-10 bg-white z-50 flex flex-col">
+    <div className="inset-0 pb-20 bg-white z-50 flex flex-col">
       <ScrollToTop />
       <audio ref={audioRef} src={tour.audioUrl} preload="metadata" />
 
