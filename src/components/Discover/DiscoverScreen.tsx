@@ -35,7 +35,7 @@ const DiscoverScreen = () => {
       price: "Free",
       distance: "2.3 km",
       category: "temples",
-      coordinates: { lat: 13.0827, lng: 80.2707 },
+      coordinates: { lat: 10.857600, lng: 78.686800 },
       audioUrl: Song2Play,
     },
     {

@@ -24,6 +24,8 @@ import GoogleMapsService from "@/services/GoogleMapsService";
 import VoiceNavigation from "@/components/VoiceNavigation";
 import { useToast } from "@/hooks/use-toast";
 import type { LucideIcon } from "lucide-react";
+import temple_des from '../Assets/Asset 1.png';
+import user_des from '../Assets/Asset 9.png';
 
 interface TravelMode {
   id: string;
@@ -66,15 +68,31 @@ const Direction = () => {
     userMarkerRef.current = new google.maps.Marker({
       position: userPos,
       map: googleMapRef.current,
-      icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-      title: "Your Location",
+      label: {
+        text: null,
+        fontWeight: "bold",
+        color: "white",
+        fontSize: "14px",
+      },
+      icon: {
+        url: user_des,
+      },
+      title: "🅰 You are here",
     });
 
     destMarkerRef.current = new google.maps.Marker({
       position: destPos,
       map: googleMapRef.current,
-      icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-      title: "Destination",
+      label: {
+        text: null,
+        fontWeight: "bold",
+        color: "white",
+        fontSize: "14px",
+      },
+      icon: {
+        url: temple_des,
+      },
+      title: "🅱 Your destination",
     });
 
     const bounds = new google.maps.LatLngBounds();
@@ -124,7 +142,7 @@ const Direction = () => {
       directionsServiceRef.current = new google.maps.DirectionsService();
       directionsRendererRef.current = new google.maps.DirectionsRenderer({
         draggable: false,
-        suppressMarkers: false,
+        suppressMarkers: true, // ✅ hide default A/B markers
       });
       directionsRendererRef.current.setMap(map);
 
@@ -253,13 +271,13 @@ const Direction = () => {
     }
   }, [userLocation, destination, selectedTravelMode, toast]);
 
- useEffect(() => {
-  if (location.state) {
-    setTourTitle(location.state.tourTitle || "");
-    setDestination(location.state.coordinates || null);
-  }
-  initializeMap();
-}, [location.state, initializeMap]);
+  useEffect(() => {
+    if (location.state) {
+      setTourTitle(location.state.tourTitle || "");
+      setDestination(location.state.coordinates || null);
+    }
+    initializeMap();
+  }, [location.state, initializeMap]);
 
   useEffect(() => {
     if (userLocation && destination && mapReady) {
