@@ -37,7 +37,7 @@ const CategoryScreen = ({ category, categoryIcon }: CategoryScreenProps) => {
   const allTours: Tour[] = [
     {
       id: 1,
-      title: "Ancient Temples of Tamil Nadu",
+      title: "Rockfort Temple, Trichy",
       description:
         "Explore 1000-year-old architecture and spiritual traditions",
       image:
@@ -47,6 +47,7 @@ const CategoryScreen = ({ category, categoryIcon }: CategoryScreenProps) => {
       language: "Tamil, English",
       difficulty: "Easy",
       price: "Free",
+      coordinates: { lat: 10.8281, lng: 78.6971 },
       distance: "2.3 km",
       category: "temples",
     },
@@ -212,10 +213,10 @@ const CategoryScreen = ({ category, categoryIcon }: CategoryScreenProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 top-0 z-40">
-        <div className="px-4 py-4">
+        <div className="px-4 pt-8 pb-4">
           <div className="flex items-center gap-3 mb-4">
             <button
               onClick={handleBack}
@@ -339,22 +340,6 @@ const CategoryScreen = ({ category, categoryIcon }: CategoryScreenProps) => {
                       </span>
                       <button className="text-orange-600 text-sm font-medium hover:text-orange-700 transition-colors">
                         Start Tour →
-                        {tour.coordinates && (
-                          <button
-                            className="text-sm mt-2 text-blue-600 hover:underline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate("/directions", {
-                                state: {
-                                  destination: tour.coordinates,
-                                  tourTitle: tour.title,
-                                },
-                              });
-                            }}
-                          >
-                            Get Directions →
-                          </button>
-                        )}
                       </button>
                     </div>
                   </div>

@@ -314,7 +314,7 @@ const Direction = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white sticky top-0 shadow-sm border-b">
         <div className="flex items-center justify-between p-4">
           <button
             onClick={() => navigate(-1)}

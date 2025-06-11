@@ -1,304 +1,187 @@
-import { useState } from "react";
-import { Play, Pause, Star, Plus } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+// Combined ToursScreen with full tour listing, filtering, and card rendering
+import { useState, useEffect } from "react";
+import { Plus, Search, Filter, Play, Star, Clock, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
+import { Card, CardContent } from "@/components/ui/card";
 import AddTourForm from "@/components/Tours/AddTourForm";
-import type { TourFormData } from '../../types/tour';
-
-interface AddTourFormProps {
-  onBack: () => void;
-  onSubmit: (tourData: TourFormData) => void;
-}
+import { saveTour, getSavedTours } from "@/utils/tourStorage";
+import type { TourFormData, SavedTour } from "@/types/tour";
 
 const ToursScreen = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(0);
-  const [progress, setProgress] = useState([23]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [tours, setTours] = useState<SavedTour[]>([]);
+  const [filteredTours, setFilteredTours] = useState<SavedTour[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterVisibility, setFilterVisibility] = useState("all");
 
-  const handleAddTour = () => setShowAddForm(true);
-  const handleBackToTours = () => setShowAddForm(false);
+  const categories = [
+    { value: 'all', label: 'All Categories' },
+    { value: 'temples', label: 'Temples 🛕' },
+    { value: 'forts', label: 'Forts 🏰' },
+    { value: 'markets', label: 'Markets 🛍️' },
+    { value: 'museums', label: 'Museums 🏛️' },
+    { value: 'villages', label: 'Villages 🏘️' },
+    { value: 'beaches', label: 'Beaches 🏖️' },
+    { value: 'gardens', label: 'Gardens 🌺' },
+    { value: 'monuments', label: 'Monuments 🗿' },
+    { value: 'trails', label: 'Trails 🚶' },
+    { value: 'nature', label: 'Nature 🏞️' },
+    { value: 'others', label: 'Others...' },
+  ];
+
+  useEffect(() => {
+    const savedTours = getSavedTours();
+    setTours(savedTours);
+  }, []);
+
+  useEffect(() => {
+    let filtered = tours;
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(tour =>
+        tour.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tour.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tour.languages.some(lang => lang.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    if (filterCategory !== 'all') {
+      filtered = filtered.filter(tour => tour.category === filterCategory);
+    }
+    if (filterVisibility !== 'all') {
+      filtered = filtered.filter(tour => tour.visibility === filterVisibility);
+    }
+    setFilteredTours(filtered);
+  }, [tours, searchQuery, filterCategory, filterVisibility]);
 
   const handleTourSubmit = (tourData: TourFormData) => {
-    console.log("New tour created:", tourData);
+    const savedTour = saveTour(tourData);
+    setTours(prev => [savedTour, ...prev]);
     setShowAddForm(false);
   };
 
-  const currentTour = {
-    title: "Ancient Temples of Tamil Nadu",
-    description:
-      "Discover the architectural marvels and spiritual significance of ancient Tamil temples",
-    totalTracks: 8,
-    duration: "2h 30m",
-    language: "Tamil",
-    narrator: "Dr. Priya Krishnan",
-    rating: 4.8,
-    image:
-      "https://images.unsplash.com/photo-1466442929976-97f336a657be?w=400&h=300&fit=crop",
+  const handlePlayTour = (tour: SavedTour) => {
+    console.log("Playing tour:", tour);
   };
 
-  const tracks = [
-    {
-      id: 1,
-      title: "Welcome to Brihadeeswarar Temple",
-      duration: "3:45",
-      completed: true,
-    },
-    {
-      id: 2,
-      title: "The Great Architecture",
-      duration: "5:20",
-      completed: true,
-    },
-    {
-      id: 3,
-      title: "Spiritual Significance",
-      duration: "4:10",
-      completed: false,
-      playing: true,
-    },
-    { id: 4, title: "Cultural Practices", duration: "6:30", completed: false },
-    { id: 5, title: "Art and Sculptures", duration: "4:45", completed: false },
-    { id: 6, title: "Historical Context", duration: "5:15", completed: false },
-    { id: 7, title: "Temple Festivals", duration: "3:50", completed: false },
-    {
-      id: 8,
-      title: "Conclusion & Reflection",
-      duration: "2:25",
-      completed: false,
-    },
-  ];
+  const getCategoryEmoji = (category: string) => {
+    const map: Record<string, string> = {
+      temples: '🛕', forts: '🏰', markets: '🛍️', museums: '🏛️', villages: '🏘️',
+      beaches: '🏖️', gardens: '🌺', monuments: '🗿', trails: '🚶', nature: '🏞️', others: '📍'
+    };
+    return map[category] || '📍';
+  };
 
-  const culturalTips = [
-    {
-      title: "Temple Etiquette",
-      description: "Remove footwear before entering the temple premises",
-      icon: "👡",
-    },
-    {
-      title: "Photography",
-      description: "Photography may be restricted in certain areas",
-      icon: "📸",
-    },
-    {
-      title: "Dress Code",
-      description: "Modest clothing covering shoulders and knees preferred",
-      icon: "👕",
-    },
-  ];
-
-  const togglePlayPause = () => setIsPlaying(!isPlaying);
+  const formatDistance = (distance: string) => {
+    if (!distance) return '';
+    return distance.toLowerCase().includes('km') ? distance : `${distance} km`;
+  };
 
   if (showAddForm) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">Add New Tour</h1>
-        </div>
-        <AddTourForm 
-        onBack={handleBackToTours} onSubmit={handleTourSubmit} />
-      </div>
-    );
+    return <AddTourForm onBack={() => setShowAddForm(false)} onSubmit={handleTourSubmit} />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
-      {/* Header with Add Tour Button */}
-      <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-serif font-bold text-gray-900">
-            Audio Tours
-          </h1>
-          <p className="text-sm text-gray-500">
-            Discover amazing places with guided audio tours
-          </p>
-        </div>
-        <Button
-          onClick={handleAddTour}
-          className="bg-gradient-to-r from-orange-400 to-yellow-400 hover:from-orange-500 hover:to-yellow-500 text-white"
-        >
-          <Plus className="w-4 h-4 mr-1" />
-          Add Tour
-        </Button>
-      </div>
-
-      {/* Current Tour Header */}
-      <div className="relative">
-        <img
-          src={currentTour.image}
-          alt={currentTour.title}
-          className="w-full h-48 object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-4 left-4 right-4 text-white">
-          <h1 className="text-xl font-serif font-bold mb-1">
-            {currentTour.title}
-          </h1>
-          <div className="flex items-center space-x-4 text-sm">
-            <span>{currentTour.duration}</span>
-            <span>•</span>
-            <span>{currentTour.language}</span>
-            <span>•</span>
-            <div className="flex items-center">
-              <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-              <span>{currentTour.rating}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Audio Player */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between mb-3">
+    <div className="bg-white pt-4">
+      <div className="bg-white border-b p-4">
+        <div className="flex flex-col sm:flex-row justify-between">
           <div>
-            <h3 className="font-medium text-gray-900">
-              {tracks[currentTrack]?.title}
-            </h3>
-            <p className="text-sm text-gray-500">
-              Narrated by {currentTour.narrator}
-            </p>
+            <h1 className="text-2xl font-bold">Audio Tours</h1>
+            <p className="text-sm text-gray-500">Explore places with guided audio tours</p>
           </div>
-          <Badge
-            variant="outline"
-            className="text-[10px] sm:text-xs px-2 py-1 rounded-sm text-gray-800 border-gray-300 bg-white shadow-sm"
-          >
-            {currentTrack + 1} of {currentTour.totalTracks}
-          </Badge>
+          <Button onClick={() => setShowAddForm(true)} className="bg-orange-500 text-white">
+            <Plus className="w-4 h-4 mr-1" /> Add Tour
+          </Button>
         </div>
+      </div>
 
-        <div className="mb-4">
-          <Slider
-            value={progress}
-            onValueChange={setProgress}
-            max={100}
-            step={1}
-            className="w-full"
+      <div className="bg-white border-b p-4 flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Search tours..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
           />
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>1:23</span>
-            <span>{tracks[currentTrack]?.duration}</span>
-          </div>
         </div>
-
-        <div className="flex items-center justify-center space-x-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentTrack(Math.max(0, currentTrack - 1))}
-            disabled={currentTrack === 0}
-          >
-            ⏮
-          </Button>
-
-          <Button
-            size="icon"
-            onClick={togglePlayPause}
-            className="w-16 h-16 rounded-full bg-gradient-to-r from-orange-400 to-yellow-400 shadow-lg text-white flex items-center justify-center"
-          >
-            {isPlaying ? (
-              <Pause className="w-6 h-6" />
-            ) : (
-              <Play className="w-6 h-6 ml-[1px]" />
-            )}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              setCurrentTrack(Math.min(tracks.length - 1, currentTrack + 1))
-            }
-            disabled={currentTrack === tracks.length - 1}
-          >
-            ⏭
-          </Button>
+        <div className="flex gap-4">
+        <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <SelectTrigger className="w-[180px]">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map(cat => (
+              <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterVisibility} onValueChange={setFilterVisibility}>
+          <SelectTrigger className="w-fit">
+            <SelectValue placeholder="Visibility" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="public">Public</SelectItem>
+            <SelectItem value="unlisted">Unlisted</SelectItem>
+            <SelectItem value="private">Private</SelectItem>
+          </SelectContent>
+        </Select>
         </div>
       </div>
 
-      {/* Track List */}
       <div className="p-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Track List</h2>
-        <div className="space-y-2">
-          {tracks.map((track, index) => (
-            <Card
-              key={track.id}
-              className={`cursor-pointer transition-all ${
-                index === currentTrack
-                  ? "ring-2 ring-orange-400 bg-orange-50"
-                  : "hover:shadow-md"
-              }`}
-              onClick={() => setCurrentTrack(index)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                        track.completed
-                          ? "bg-emerald-100 text-emerald-600"
-                          : track.playing
-                          ? "bg-orange-400 text-white"
-                          : "bg-gray-100 text-gray-400"
-                      }`}
-                    >
-                      {track.completed ? (
-                        "✓"
-                      ) : track.playing ? (
-                        <span className="inline-block text-white text-xs translate-x-[1px]">
-                          ▶
-                        </span>
-                      ) : (
-                        index + 1
-                      )}
+        {filteredTours.length === 0 ? (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">No tours found</h2>
+            <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredTours.map(tour => (
+              <Card key={tour.id} className="bg-white rounded-lg hover:shadow-md">
+                <div className="relative">
+                  {tour.imageUrl ? (
+                    <img src={tour.imageUrl} alt={tour.title} className="w-full h-48 object-cover" />
+                  ) : (
+                    <div className="w-full h-48 bg-gradient-to-br from-orange-200 to-yellow-200 flex items-center justify-center">
+                      <span className="text-4xl">{getCategoryEmoji(tour.category)}</span>
                     </div>
-                    <div>
-                      <h3
-                        className={`font-medium ${
-                          index === currentTrack
-                            ? "text-orange-600"
-                            : "text-gray-900"
-                        }`}
-                      >
-                        {track.title}
-                      </h3>
-                      <p className="text-sm text-gray-500">{track.duration}</p>
-                    </div>
-                  </div>
-
-                  {index === currentTrack && (
-                    <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
                   )}
+                  {tour.distance && (
+                    <Badge className="absolute top-2 left-2 bg-black/70 text-white text-xs">{formatDistance(tour.distance)}</Badge>
+                  )}
+                  <Badge className="absolute top-2 right-2 bg-green-500 text-white text-xs">{tour.price === 0 ? 'Free' : `$${tour.price}`}</Badge>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Cultural Tips */}
-      <div className="px-4 pb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Cultural Tips
-        </h2>
-        <div className="space-y-3">
-          {culturalTips.map((tip, index) => (
-            <Card key={index} className="bg-blue-50 border-blue-200">
-              <CardContent className="p-4">
-                <div className="flex items-start space-x-3">
-                  <span className="text-2xl">{tip.icon}</span>
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-1">
-                      {tip.title}
-                    </h3>
-                    <p className="text-sm text-gray-600">{tip.description}</p>
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-lg text-gray-900 line-clamp-1">{tour.title}</h3>
+                  <p className="text-sm text-gray-600 line-clamp-2 mb-2">{tour.description}</p>
+                  <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" /> <span>2.5 hrs</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" /> <span>Easy</span>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm">Languages: {tour.languages.slice(0, 2).join(', ')}{tour.languages.length > 2 ? ` +${tour.languages.length - 2}` : ''}</div>
+                    <Button size="sm" onClick={() => handlePlayTour(tour)} className="bg-orange-500 text-white text-xs">Start Tour →</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

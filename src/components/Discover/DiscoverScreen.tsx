@@ -143,7 +143,7 @@ const DiscoverScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="bg-gray-50">
       {/* Header with Search */}
       <div className="bg-white image_bg relative border-b border-gray-200 top-0 z-40">
         <div className="absolute inset-0 bg-black/40 z-0" />
